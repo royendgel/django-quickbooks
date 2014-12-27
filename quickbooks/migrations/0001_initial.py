@@ -17,9 +17,20 @@ class Migration(migrations.Migration):
             name='QWCTicket',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
-                ('ticket', uuidfield.fields.UUIDField(blank=True, unique=True, editable=False, max_length=32)),
+                ('ticket', uuidfield.fields.UUIDField(max_length=32, editable=False, unique=True, blank=True)),
                 ('active', models.BooleanField(default=True)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='ReceiveResponse',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
+                ('response', models.TextField()),
+                ('ticket', models.ForeignKey(to='quickbooks.QWCTicket')),
             ],
             options={
             },
@@ -29,7 +40,7 @@ class Migration(migrations.Migration):
             name='UserProfile',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
-                ('company_file', models.CharField(blank=True, default='', max_length=255)),
+                ('company_file', models.CharField(max_length=255, default='', blank=True)),
                 ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
             ],
             options={

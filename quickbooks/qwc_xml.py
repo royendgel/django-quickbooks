@@ -10,14 +10,13 @@ close_connection = """<?xml version="1.0" encoding="UTF-8"?>
 	</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>"""
 
-# This one will authenticate the web conector I use this only for testing.
 authenticated = ("""<?xml version="1.0" encoding="UTF-8"?>
     <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://developer.intuit.com/">
     	<SOAP-ENV:Body>
     		<ns1:authenticateResponse>
     			<ns1:authenticateResult>
     				<ns1:string>%s</ns1:string>
-    				<ns1:string></ns1:string>
+    				<ns1:string>%s</ns1:string>
     			</ns1:authenticateResult>
     		</ns1:authenticateResponse>
     	</SOAP-ENV:Body>
@@ -96,3 +95,24 @@ do_for_me = """<?xml version="1.0" encoding="UTF-8"?>
 		</ns1:sendRequestXMLResponse>
 	</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>"""
+
+processed = """<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://developer.intuit.com/">
+	<SOAP-ENV:Body>
+		<ns1:receiveResponseXMLResponse>
+			<ns1:receiveResponseXMLResult>%s</ns1:receiveResponseXMLResult>
+		</ns1:receiveResponseXMLResponse>
+	</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
+
+process_failed = """<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<soap:Body>
+		<receiveResponseXML xmlns="http://developer.intuit.com/">
+			<ticket>438d2fc02a519df5fcc2eef0e7ad3898</ticket>
+			<response />
+			<hresult>0x80040400</hresult>
+			<message>QuickBooks found an error when parsing the provided XML text stream.</message>
+		</receiveResponseXML>
+	</soap:Body>
+</soap:Envelope>"""

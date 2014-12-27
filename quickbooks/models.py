@@ -10,6 +10,13 @@ class QWCTicket(models.Model):
     def __str__(self):
         return "%s | %s" %(self.user, self.ticket)
 
+class ReceiveResponse(models.Model):
+    ticket = models.ForeignKey(QWCTicket)
+    response = models.TextField()
+
+    def __str__(self):
+        return "%s" %(self.ticket)
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     company_file = models.CharField(max_length=255, default='', blank=True)

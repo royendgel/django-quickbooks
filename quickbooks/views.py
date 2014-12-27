@@ -9,10 +9,14 @@ from suds.plugin import MessagePlugin
 from lxml import etree
 from quickbooks.models import QWCTicket
 from quickbooks.models import UserProfile
+from quickbooks.models import ReceiveResponse
 
 from quickbooks.qwc_xml import authenticated
 from quickbooks.qwc_xml import failed
 from quickbooks.qwc_xml import close_connection
+from quickbooks.qwc_xml import processed
+from quickbooks.qwc_xml import process_failed
+from quickbooks.qwc_xml import do_for_me
 
 from quickbooks.uttils import tag
 
@@ -33,6 +37,7 @@ def show_wsdl(request):
 
 @csrf_exempt
 def home(request):
+    c = request.body
     if request.method == "GET":
         return HttpResponse('The request need to be POST')
     url = 'file://' + os.path.join(settings.BASE_DIR, 'quickbooks', 'qb.wsdl')
@@ -50,15 +55,31 @@ def home(request):
         # Authenticate with database
         a = authenticate(username=username, password=password)
         if a:
-            # Delete any ticket this user have.
-            QWCTicket.objects.filter(user=a).delete()
+            # everything active need to be inactive
+
+            ac = QWCTicket.objects.filter(user=a, active=True)
+            if ac != None:
+                for ca in ac:
+                    ca.active = False
+                    ca.save()
             ti = QWCTicket.objects.create(user=a)
             # resp = client.service.authenticateResponse(ti.ticket).envelope
-            return HttpResponse(authenticated %(ti.ticket), content_type='text/xml')
+            s = ''
+            try:
+                s = a.userprofile.company_file
+            except:
+                pass
+            return HttpResponse(authenticated %(ti.ticket, s), content_type='text/xml')
         else:
             return HttpResponse(failed, content_type='text/xml')
 
     if ticket is not None:
+        receive_response = root[0].find(tag('receiveResponseXML'))
+        send_request = root[0].find(tag('sendRequestXML'))
+        if receive_response != None:
+            tick = QWCTicket.objects.get(ticket=ticket.text)
+            ReceiveResponse.objects.create(ticket=tick, response=receive_response[1].text)
+
         t = QWCTicket.objects.get(ticket=ticket.text)
         if t is not None:
             # all_fancy_stuff = cont.find(tag('strHCPResponse')).text
@@ -75,6 +96,9 @@ def home(request):
                 if company_file_location != profile.company_file:
                     profile.company_file = company_file_location.text
                     profile.save()
+            return HttpResponse(do_for_me, content_type='text/xml')
             return HttpResponse(close_connection %("Finished!"), content_type='text/xml')
+
+
 
     return HttpResponse('do_for_me', content_type='text/xml')
