@@ -8,6 +8,7 @@ from suds.client import Client
 from suds.plugin import MessagePlugin
 from lxml import etree
 from quickbooks.models import QWCTicket
+from quickbooks.models import UserProfile
 
 from quickbooks.qwc_xml import authenticated
 from quickbooks.qwc_xml import failed
@@ -61,13 +62,19 @@ def home(request):
         t = QWCTicket.objects.get(ticket=ticket.text)
         if t is not None:
             # all_fancy_stuff = cont.find(tag('strHCPResponse')).text
+            profile = None
             company_file_location = cont.find(tag('strCompanyFileName'))
 
             # update the company_file location if it's not updated.
+            try:
+                profile = t.user.userprofile
+            except Exception as e:
+                profile = UserProfile.objects.create(user=t.user)
+
             if company_file_location is not None:
-                if company_file_location != t.company_file:
-                    t.company_file = company_file_location.text
-                    t.save()
-            return HttpResponse(close_connection %("Finished"), content_type='text/xml')
+                if company_file_location != profile.company_file:
+                    profile.company_file = company_file_location.text
+                    profile.save()
+            return HttpResponse(close_connection %("Finished!"), content_type='text/xml')
 
     return HttpResponse('do_for_me', content_type='text/xml')
