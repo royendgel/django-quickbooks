@@ -136,3 +136,6 @@ def home(request):
             logging.debug("This message does not contain response")
 
     return HttpResponse(close_connection %('closed'), content_type='text/xml')
+
+def welcome(request):
+    return HttpResponse('<h1>Use /quickbooks</h1>', content_type='text/html')

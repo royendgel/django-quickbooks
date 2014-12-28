@@ -122,11 +122,12 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+
     },
 }
 
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 
-import dj_database_url
-DATABASES['default'] =  dj_database_url.config()
+# import dj_database_url
+# DATABASES['default'] =  dj_database_url.config()
