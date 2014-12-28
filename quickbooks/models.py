@@ -20,6 +20,16 @@ class ReceiveResponse(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     company_file = models.CharField(max_length=255, default='', blank=True)
+    major_version = models.CharField(max_length=255, default='', blank=True)
+    minor_version = models.CharField(max_length=255, default='', blank=True)
 
     def __str__(self):
         return "%s" %(self.user)
+
+class MessageQue(models.Model):
+    user = models.ForeignKey(User)
+    message = models.TextField()
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return "%s | %s" %(self.user, self.active)

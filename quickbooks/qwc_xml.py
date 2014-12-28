@@ -70,28 +70,11 @@ xm3 = """"<?xml version="1.0" encoding="UTF-8"?>
 </SOAP-ENV:Envelope>"""
 
 
-do_for_me = """<?xml version="1.0" encoding="UTF-8"?>
+qrequest = """<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://developer.intuit.com/">
 	<SOAP-ENV:Body>
 		<ns1:sendRequestXMLResponse>
-			<ns1:sendRequestXMLResult>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
-			&lt;?qbxml version=&quot;2.1&quot;?&gt;
-			&lt;QBXML&gt;
-				&lt;QBXMLMsgsRq onError=&quot;stopOnError&quot;&gt;
-					&lt;ReceivePaymentAddRq requestID=&quot;UmVjZWl2ZVBheW1lbnRBZGR8MTE2&quot;&gt;
-						&lt;ReceivePaymentAdd&gt;
-							&lt;CustomerRef&gt;
-								&lt;ListID&gt;90000-1241602188&lt;/ListID&gt;
-							&lt;/CustomerRef&gt;
-							&lt;TxnDate&gt;2009-05-06&lt;/TxnDate&gt;
-							&lt;RefNumber&gt;116&lt;/RefNumber&gt;
-							&lt;TotalAmount&gt;265.40&lt;/TotalAmount&gt;
-							&lt;Memo&gt;Payment for invoice #116&lt;/Memo&gt;
-							&lt;IsAutoApply&gt;true&lt;/IsAutoApply&gt;
-						&lt;/ReceivePaymentAdd&gt;
-					&lt;/ReceivePaymentAddRq&gt;
-				&lt;/QBXMLMsgsRq&gt;
-			&lt;/QBXML&gt;</ns1:sendRequestXMLResult>
+			<ns1:sendRequestXMLResult>%s</ns1:sendRequestXMLResult>
 		</ns1:sendRequestXMLResponse>
 	</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>"""
