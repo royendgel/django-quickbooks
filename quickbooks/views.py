@@ -45,6 +45,7 @@ def show_wsdl(request):
 @csrf_exempt
 def home(request):
     c = request.body
+    # logging.debug(c)
     if request.method == "GET":
         logging.debug("kdhohdjdhdj")
         return HttpResponse('The request need to be POST')
@@ -88,21 +89,6 @@ def home(request):
             return HttpResponse(failed, content_type='text/xml')
 
     if ticket is not None:
-        receive_response = root[0].find(tag('receiveResponseXML'))
-        send_request = root[0].find(tag('sendRequestXML'))
-        if send_request != None:
-            for child in send_request:
-                logging.debug(child)
-        if receive_response != None:
-            logging.debug(receive_response.text)
-            tick = QWCTicket.objects.get(ticket=ticket.text)
-            response = receive_response[1].text
-            if response != None:
-                logging.debug('response is %s' %(response))
-                ReceiveResponse.objects.create(ticket=tick, response=receive_response[1].text)
-            else:
-                logging.debug("This message does not contain response")
-
         t = QWCTicket.objects.get(ticket=ticket.text)
         if t is not None:
             # all_fancy_stuff = cont.find(tag('strHCPResponse')).text
@@ -118,20 +104,47 @@ def home(request):
                 if company_file_location != profile.company_file:
                     profile.company_file = company_file_location.text
                     profile.save()
+
+        logging.debug("Dealing with ticket: %s" %(ticket.text))
+        receive_response = root[0].find(tag('receiveResponseXML'))
+        logging.debug(root.findall(tag('receiveResponseXML')))
+        logging.debug(root.find(tag('receiveResponseXML')))
+        logging.debug(root.findtext(tag('receiveResponseXML')))
+        send_request = root[0].find(tag('sendRequestXML'))
+        logging.debug(send_request)
+        if send_request != None:
+            logging.debug("sendRequestXML detected tags will appear below:")
+            for child in send_request:
+                logging.debug(child.tag)
             mq = MessageQue.objects.filter(user=t.user, active=True)
             if len(mq) != 0:
                 logging.debug("MessageQue has one or more messages awaiting")
                 m = mq[0]
                 ms = m.message
-                logging.debug("sending message in que: %s" %(m.id))
+                logging.debug("sending message in que: %s" % (m.id))
 
                 # Mark message as consumed
                 m.active = False
-                # m.save()
-                return HttpResponse(qrequest %(xml_soap(ms)), content_type='text/xml')
+                m.save()
+                return HttpResponse(xml_soap(ms), content_type='text/xml')
             else:
                 logging.debug("No message in messageQue")
                 logging.debug('Finished')
-                return HttpResponse(close_connection %("Finished!"), content_type='text/xml')
+                return HttpResponse(close_connection % ("Finished!"), content_type='text/xml')
+
+            return HttpResponse(close_connection %(100), content_type='text/xml')
+        else:
+            logging.debug("sendRequestXML Not detected")
+
+        if receive_response != None:
+            logging.debug(receive_response.text)
+            tick = QWCTicket.objects.get(ticket=ticket.text)
+            response = receive_response[1].text
+            if response != None:
+                logging.debug('response is %s' %(response))
+                ReceiveResponse.objects.create(ticket=tick, response=receive_response[1].text)
+                return HttpResponse(close_connection %('ssss'), content_type='text/xml')
+        else:
+            logging.debug("This message does not contain response")
 
     return HttpResponse(close_connection %('closed'), content_type='text/xml')
