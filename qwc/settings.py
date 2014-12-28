@@ -19,8 +19,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'w2&la3(&9hwvr!z!r-+x^j85vknjox_6kye(bi2(^0(bb#(nv7'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 TEMPLATE_DEBUG = True
 
@@ -127,4 +125,3 @@ LOGGING = {
 
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
-'
