@@ -40,8 +40,6 @@ def home(request):
         logging.debug("kdhohdjdhdj")
         return HttpResponse('The request need to be POST')
     url = 'file://' + os.path.join(settings.BASE_DIR, 'quickbooks', 'qb.wsdl')
-    client = Client(url, plugins=[LogPlugin()])
-    client.set_options(nosend=True)
     contents = etree.parse(request)
     root = contents.getroot()
 

@@ -104,5 +104,26 @@ LOGGING = {
     },
 }
 
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'debug.log'),
+        },
+
+    },
+    'loggers': {
+        'quickbooks': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
