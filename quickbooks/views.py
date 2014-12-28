@@ -6,9 +6,6 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 
-from suds.client import Client
-from suds.plugin import MessagePlugin
-
 from lxml import etree
 
 from quickbooks.models import QWCTicket
@@ -27,13 +24,6 @@ from quickbooks.uttils import tag
 from quickbooks.uttils import xml_soap
 
 logging = log.getLogger(__name__)
-
-# This is to log every message to the console.
-class LogPlugin(MessagePlugin):
-  def sending(self, context):
-    print(str(context.envelope))
-  def received(self, context):
-    print(str(context.reply))
 
 @csrf_exempt
 def show_wsdl(request):
