@@ -126,7 +126,7 @@ def home(request):
                 # Mark message as consumed
                 m.active = False
                 m.save()
-                return HttpResponse(xml_soap(ms), content_type='text/xml')
+                return HttpResponse(qrequest %(xml_soap(ms)), content_type='text/xml')
             else:
                 logging.debug("No message in messageQue")
                 logging.debug('Finished')
