@@ -101,3 +101,5 @@ crashlytics.properties
 crashlytics-build.properties
 db.sqlite3
 *.log
+play_*
+dev.sqlite3
