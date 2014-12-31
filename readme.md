@@ -48,7 +48,7 @@ remember the trailing slash at quickbooks/.
 
 run that file on the computer that have quickbooks & webconnector installed.
 
-Then finally click enter the password for the company file.
+Then finally enter the password for the company file.
 as password enter kickstart
 
 
