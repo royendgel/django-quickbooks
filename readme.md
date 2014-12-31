@@ -30,7 +30,25 @@ Requirements:
 Note : Remember if you are using mac/linux and you are trying this with virualbox or remote.
 Change your server to 0.0.0.0:8000
 
-### Double click on the webconnector file in this directory
+### Get the webconnector file
+Open your browser and go to http://localhost:8000/quickbooks/get-company-file
+open that file in your text editor and edit your server url.
+or better edit in views : get_company_file
+
+```python
+def get_company_file(request):
+    response = HttpResponse(generate_qbc_file(), content_type='text/xml')
+    response['Content-Disposition'] = 'attachment; filename="quickbooksconnector.qwc"'
+    return response
+
+```
+
+change `generate_qbc_file()` to something like this `generate_qbc_file(app_url="http://192.168.1.20/quickbooks/")`
+remember the trailing slash at quickbooks/.
+
+run that file on the computer that have quickbooks & webconnector installed.
+
+Then finally click enter the password for the company file.
 as password enter kickstart
 
 

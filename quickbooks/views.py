@@ -22,6 +22,7 @@ from quickbooks.qwc_xml import qrequest
 
 from quickbooks.uttils import tag
 from quickbooks.uttils import xml_soap
+from quickbooks.uttils import generate_qbc_file
 
 logging = log.getLogger(__name__)
 
@@ -151,3 +152,8 @@ def home(request):
 
 def welcome(request):
     return HttpResponse('<h1>Use /quickbooks</h1>', content_type='text/html')
+
+def get_company_file(request):
+    response = HttpResponse(generate_qbc_file(), content_type='text/xml')
+    response['Content-Disposition'] = 'attachment; filename="quickbooksconnector.qwc"'
+    return response
