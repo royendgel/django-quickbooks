@@ -11,19 +11,19 @@ Requirements:
 ## To Start :
 
 ### Clone this repo
-```https://github.com/royendgel/django-quickbooks.git```
+`https://github.com/royendgel/django-quickbooks.git`
 
 ### Install the requirements (it's recommended using virtualenv)
-```pip install -r requirements.txt```
+`pip install -r requirements.txt`
 
 ### Do database migration
-```python manage.py migrate```
+`python manage.py migrate`
 
 ### Run the initial python file to kick start trying otherwise not.
-```python initialize.py```
+`python initialize.py`
 
 ### Start the server
-```python manage.py runserver```
+`python manage.py runserver`
 
 Note : Remember if you are using mac/linux and you are trying this with virualbox or remote.
 Change your server to 0.0.0.0:8000
