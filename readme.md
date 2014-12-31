@@ -11,7 +11,7 @@ Requirements:
 ## To Start :
 
 ### Clone this repo
-`https://github.com/royendgel/django-quickbooks.git`
+`git clone https://github.com/royendgel/django-quickbooks.git`
 
 ### Install the requirements (it's recommended using virtualenv)
 `pip install -r requirements.txt`
