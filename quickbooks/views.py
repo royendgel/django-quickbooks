@@ -25,12 +25,14 @@ from quickbooks.uttils import xml_soap
 
 logging = log.getLogger(__name__)
 
+
 @csrf_exempt
 def show_wsdl(request):
     contents = ""
     with(open(os.path.join(settings.BASE_DIR, 'quickbooks', 'qb.wsdl'), 'r')) as f:
         contents = f.read()
     return HttpResponse(contents, content_type='text/xml')
+
 
 @csrf_exempt
 def home(request):
@@ -40,7 +42,10 @@ def home(request):
         logging.debug("kdhohdjdhdj")
         return HttpResponse('The request need to be POST')
     url = 'file://' + os.path.join(settings.BASE_DIR, 'quickbooks', 'qb.wsdl')
-    contents = etree.parse(request)
+
+    # FIXME: huge_tree allow this thing to eat up your memory!
+    parser = etree.XMLParser(huge_tree=True)
+    contents = etree.parse(request, parser)
     root = contents.getroot()
 
     # We need to listen to authenticate, token or error.
@@ -54,7 +59,7 @@ def home(request):
         # Authenticate with database
         a = authenticate(username=username, password=password)
         if a:
-            logging.debug('Valid Authentication username and password user: %s' %(a.username))
+            logging.debug('Valid Authentication username and password user: %s' % (a.username))
             # everything active need to be inactive
             ac = QWCTicket.objects.filter(user=a, active=True)
             if ac != None:
@@ -62,18 +67,18 @@ def home(request):
                     ca.active = False
                     ca.save()
             ti = QWCTicket.objects.create(user=a)
-            logging.debug('Ticket has been created ticket: %s' %(ti.ticket))
+            logging.debug('Ticket has been created ticket: %s' % (ti.ticket))
             # resp = client.service.authenticateResponse(ti.ticket).envelope
             s = ''
             try:
                 s = a.userprofile.company_file
-                logging.debug('company file detected: %s' %(s))
+                logging.debug('company file detected: %s' % (s))
             except:
                 logging.debug('Company file not found')
             logging.debug("Authenticated xml message sent")
-            return HttpResponse(authenticated %(ti.ticket, s), content_type='text/xml')
+            return HttpResponse(authenticated % (ti.ticket, s), content_type='text/xml')
         else:
-            logging.debug('invalid user detected username: %s password %s' %(username, password))
+            logging.debug('invalid user detected username: %s password %s' % (username, password))
             return HttpResponse(failed, content_type='text/xml')
 
     if ticket is not None:
@@ -93,7 +98,7 @@ def home(request):
                     profile.company_file = company_file_location.text
                     profile.save()
 
-        logging.debug("Dealing with ticket: %s" %(ticket.text))
+        logging.debug("Dealing with ticket: %s" % (ticket.text))
         receive_response = root[0].find(tag('receiveResponseXML'))
         logging.debug(root.findall(tag('receiveResponseXML')))
         logging.debug(root.find(tag('receiveResponseXML')))
@@ -114,13 +119,13 @@ def home(request):
                 # Mark message as consumed
                 m.active = False
                 m.save()
-                return HttpResponse(qrequest %(xml_soap(ms)), content_type='text/xml')
+                return HttpResponse(qrequest % (xml_soap(ms)), content_type='text/xml')
             else:
                 logging.debug("No message in messageQue")
                 logging.debug('Finished')
                 return HttpResponse(close_connection % ("Finished!"), content_type='text/xml')
 
-            return HttpResponse(close_connection %(100), content_type='text/xml')
+            return HttpResponse(close_connection % (100), content_type='text/xml')
         else:
             logging.debug("sendRequestXML Not detected")
 
@@ -129,13 +134,20 @@ def home(request):
             tick = QWCTicket.objects.get(ticket=ticket.text)
             response = receive_response[1].text
             if response != None:
-                logging.debug('response is %s' %(response))
-                ReceiveResponse.objects.create(ticket=tick, response=receive_response[1].text)
-                return HttpResponse(close_connection %('ssss'), content_type='text/xml')
+                logging.debug('response is %s' % (response))
+                ReceiveResponse.objects.create(ticket=tick, response=response)
+                return HttpResponse(close_connection % ('ssss'), content_type='text/xml')
         else:
             logging.debug("This message does not contain response")
+    logging.info("activating everything that is set to repeat")
+    repeats = MessageQue.objects.filter(repeat=True, active=False)
+    for repeat in repeats:
+        repeat.active = True
+        repeat.save()
+        
+    logging.info("Calling close")
+    return HttpResponse(close_connection % ('closed'), content_type='text/xml')
 
-    return HttpResponse(close_connection %('closed'), content_type='text/xml')
 
 def welcome(request):
     return HttpResponse('<h1>Use /quickbooks</h1>', content_type='text/html')

@@ -1,4 +1,5 @@
 # Message that the quickbooks webconnector is sending for me
+from quickbooks.uttils import xml_soap
 
 
 close_connection = """<?xml version="1.0" encoding="UTF-8"?>
@@ -78,6 +79,7 @@ qrequest = """<?xml version="1.0" encoding="UTF-8"?>
 		</ns1:sendRequestXMLResponse>
 	</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>"""
+
 
 processed = """<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://developer.intuit.com/">

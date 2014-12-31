@@ -1,10 +1,15 @@
 Django==1.7.1
+Pygments==2.0.1
+bpython==0.13.1
 dj-database-url==0.3.0
 dj-static==0.0.6
 django-extensions==1.4.9
 django-uuidfield==0.5.0
+gnureadline==6.3.3
 gunicorn==19.1.1
+ipython==2.3.1
 lxml==3.4.1
 six==1.8.0
 static3==0.5.1
 suds-jurko==0.6
+untangle==1.1.0

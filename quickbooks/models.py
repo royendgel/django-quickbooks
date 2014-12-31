@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from uuidfield import UUIDField
 
+from quickbooks.qbxml import QBXML
 class QWCTicket(models.Model):
     ticket = UUIDField(auto=True)
     user = models.ForeignKey(User)
@@ -13,6 +14,7 @@ class QWCTicket(models.Model):
 class ReceiveResponse(models.Model):
     ticket = models.ForeignKey(QWCTicket)
     response = models.TextField()
+    processed = models.BooleanField(default=False)
 
     def __str__(self):
         return "%s" %(self.ticket)
@@ -27,9 +29,12 @@ class UserProfile(models.Model):
         return "%s" %(self.user)
 
 class MessageQue(models.Model):
+    name = models.CharField(default='Query', max_length=255)
+    description = models.TextField(blank=True, null=True)
     user = models.ForeignKey(User)
     message = models.TextField()
     active = models.BooleanField(default=True)
+    repeat = models.BooleanField(default=False)
 
     def __str__(self):
         return "%s | %s" %(self.user, self.active)
