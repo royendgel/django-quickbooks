@@ -6,7 +6,7 @@ class QBXML:
 
     def __init__(self):
         self.xml_prefix = '''<?xml version="1.0" encoding="utf-8"?><?qbxml version="2.1"?>'''
-        self.message = [
+        self.names = [
             'Customer',
             'Bill',
             'Account',
@@ -25,16 +25,20 @@ class QBXML:
             'Mod',
         ]
 
-    def __build_name(self, name):
+    def __build_name(self, name, method, request):
+        method = method.title()
+        request = request.title()
+        return name + method + request
+
         return "InvoiceQueryRq"
 
-    def __build_xml(self, name, request_id=None):
+    def __build_xml(self, name, method='query', request='rq', request_id=None):
         request_id = '22222'
         c = {
             'QBXML': {
                 'QBXMLMsgsRq': {
                     '@onError': 'stopOnError',
-                    name: {
+                    self.__build_name(name, method=method, request=request): {
                         '@requestID': request_id
                     }
                 }
@@ -48,4 +52,10 @@ class QBXML:
 
     def customer(self, name):
         return self.__build_xml(name, request_id=3333)
+
+    def initial(self):
+        msg = []
+        for name in self.names:
+            msg.append({'name' : name.lower() ,'message' : self.__build_xml(name=name)})
+        return msg
 

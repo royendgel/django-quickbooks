@@ -2,6 +2,7 @@ Quickbooks & Django Desktop
 ===========================================
 
 ####A very messy implementation of Quickbooks desktop mirroring.
+#####You get everything without magic.
 ####Two-way communication between Quickbooks and Django/Python.
 
 Requirements:
@@ -19,7 +20,8 @@ Requirements:
 ### Do database migration
 `python manage.py migrate`
 
-### Run the initial python file to kick start trying otherwise not.
+### Run the initial python file to kick start trying otherwise not. (Use only in clean installation!!)
+### It will wipe all your models.
 `python initialize.py`
 
 ### Start the server
@@ -35,16 +37,38 @@ as password enter kickstart
 
 ###Tested with 9500 entries. it is working ! Work in progress.
 
-Need to be done (Two way communication ) :
+Currently if you start as described above with intialize.py it will read and store data as xml in your db.
+This are the tested queries read:
 
-- Customers
-- Accounts
-- Estimates
-- Invoices
+- Customer
+- Bill
+- Account
+- Check
+- Account
+- Estimate
+- Invoice
+- ReceivePayment
+- Vendor
+- ToDo
+
+
+Need to be done (Write new and/or modified records back to quickbooks) :
+
+- Customer
+- Bill
+- Account
+- Check
+- Account
+- Estimate
+- Invoice
+- ReceivePayment
+- Vendor
+- ToDo
 
 
 More things:
-- Advanced queries(Not really I don't see why for now)
+- Time stamped so I can ask for only changed or added records
 - Irritation for big company files
+- Advanced queries(Not really I don't see why for now)
 
 #####Any Question or help contact me: royendgel@techprocur.com
