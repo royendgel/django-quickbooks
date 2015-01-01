@@ -132,27 +132,6 @@ class QBCheck(models.Model):
     def __str__(self):
         return self.full_name
 
-class L(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)  # Name
-    special_account_type = models.CharField(max_length=255, blank=True, null=True)  # SpecialAccountType
-    sublevel = models.CharField(max_length=255, blank=True, null=True)  # Sublevel
-    time_created = models.CharField(max_length=255, blank=True, null=True)  # TimeCreated
-    time_modified = models.CharField(max_length=255, blank=True, null=True)  # TimeModified
-    parent_ref = models.CharField(max_length=255, blank=True, null=True)  # ParentRef
-    is_active = models.CharField(max_length=255, blank=True, null=True)  # IsActive
-    edit_sequence = models.CharField(max_length=255, blank=True, null=True)  # EditSequence
-    account_type = models.CharField(max_length=255, blank=True, null=True)  # AccountType
-    cash_flow_classification = models.CharField(max_length=255, blank=True, null=True)  # CashFlowClassification
-    list_id = models.CharField(max_length=255, blank=True, null=True)  # ListID
-    full_name = models.CharField(max_length=255, blank=True, null=True)  # FullName
-    balance = models.CharField(max_length=255, blank=True, null=True)  # Balance
-    account_number = models.CharField(max_length=255, blank=True, null=True)  # AccountNumber
-    total_balance = models.CharField(max_length=255, blank=True, null=True)  # TotalBalance
-    desc = models.CharField(max_length=255, blank=True, null=True)  # Desc
-
-    def __str__(self):
-        return self.name
-
 class QBEstimate(models.Model):
     bill_address = models.CharField(max_length=255, blank=True, null=True)  # BillAddress
     ref_number = models.CharField(max_length=255, blank=True, null=True)  # RefNumber

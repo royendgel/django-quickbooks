@@ -26,11 +26,16 @@ class QBXML:
         ]
 
     def __build_name(self, name, method, request):
+        """ Builds the name of the query
+        :param name:
+        :param method:
+        :param request:
+        :return:
+        """
         method = method.title()
         request = request.title()
         return name + method + request
 
-        return "InvoiceQueryRq"
 
     def __build_xml(self, name, method='query', request='rq', request_id=None):
         request_id = '22222'
@@ -39,7 +44,8 @@ class QBXML:
                 'QBXMLMsgsRq': {
                     '@onError': 'stopOnError',
                     self.__build_name(name, method=method, request=request): {
-                        '@requestID': request_id
+                        '@requestID': request_id,
+                        # 'FromModifiedDate' : "2014-11-30"
                     }
                 }
             }

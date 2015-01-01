@@ -123,7 +123,12 @@ def home(request):
                 return HttpResponse(qrequest % (xml_soap(ms)), content_type='text/xml')
             else:
                 logging.debug("No message in messageQue")
+                logging.info("activating everything that is set to repeat")
                 logging.debug('Finished')
+                repeats = MessageQue.objects.filter(repeat=True, active=False)
+                for repeat in repeats:
+                    repeat.active = True
+                    repeat.save()
                 return HttpResponse(close_connection % ("Finished!"), content_type='text/xml')
 
             return HttpResponse(close_connection % (100), content_type='text/xml')
@@ -140,14 +145,8 @@ def home(request):
                 return HttpResponse(close_connection % ('ssss'), content_type='text/xml')
         else:
             logging.debug("This message does not contain response")
-    logging.info("activating everything that is set to repeat")
-    repeats = MessageQue.objects.filter(repeat=True, active=False)
-    for repeat in repeats:
-        repeat.active = True
-        repeat.save()
-        
     logging.info("Calling close")
-    return HttpResponse(close_connection % ('closed'), content_type='text/xml')
+    return HttpResponse(close_connection % ('closed!!!'), content_type='text/xml')
 
 
 def welcome(request):
@@ -155,5 +154,4 @@ def welcome(request):
 
 def get_company_file(request):
     response = HttpResponse(generate_qbc_file(), content_type='text/xml')
-    response['Content-Disposition'] = 'attachment; filename="quickbooksconnector.qwc"'
-    return response
+    response['Content-Disposition'] = 'attachment; filename="quickbooks"'
