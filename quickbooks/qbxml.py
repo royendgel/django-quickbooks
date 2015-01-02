@@ -37,6 +37,22 @@ class QBXML:
         return name + method + request
 
 
+    def __build__json(self, name, method='query', request='rq', request_id=None):
+        request_id = '22222'
+        c = {
+            'QBXML': {
+                'QBXMLMsgsRq': {
+                    '@onError': 'stopOnError',
+                    self.__build_name(name, method=method, request=request): {
+                        '@requestID': request_id,
+                        # 'FromModifiedDate' : "2014-11-30"
+                    }
+                }
+            }
+        }
+
+        return c
+
     def __build_xml(self, name, method='query', request='rq', request_id=None):
         request_id = '22222'
         c = {
@@ -45,6 +61,7 @@ class QBXML:
                     '@onError': 'stopOnError',
                     self.__build_name(name, method=method, request=request): {
                         '@requestID': request_id,
+                        # 'MaxReturned' : 5
                         # 'FromModifiedDate' : "2014-11-30"
                     }
                 }

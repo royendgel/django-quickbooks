@@ -130,7 +130,7 @@ class QBCheck(models.Model):
     txn_id = models.CharField(max_length=255, blank=True, null=True)  # TxnID
 
     def __str__(self):
-        return self.full_name
+        return self.memo
 
 class QBEstimate(models.Model):
     bill_address = models.CharField(max_length=255, blank=True, null=True)  # BillAddress
@@ -206,4 +206,4 @@ class QBInvoice(models.Model):
     edit_sequence = models.CharField(max_length=255, blank=True, null=True)  # EditSequence
 
     def __str__(self):
-        return self.full_name
+        return self.subtotal

@@ -1,6 +1,7 @@
 import os
 import logging as log
 
+from django.db.models import get_app, get_models
 from django.shortcuts import HttpResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -20,9 +21,12 @@ from quickbooks.qwc_xml import processed
 from quickbooks.qwc_xml import process_failed
 from quickbooks.qwc_xml import qrequest
 
-from quickbooks.uttils import tag
+from quickbooks.uttils import convert
 from quickbooks.uttils import xml_soap
 from quickbooks.uttils import generate_qbc_file
+from quickbooks.uttils import tag
+
+from quickbooks.qbxml import QBXML
 
 logging = log.getLogger(__name__)
 
@@ -139,9 +143,29 @@ def home(request):
             logging.debug(receive_response.text)
             tick = QWCTicket.objects.get(ticket=ticket.text)
             response = receive_response[1].text
+            receive_plain = etree.fromstring(response)
+            receive_query_name = etree.fromstring(response)[0][0].tag[:-2]
             if response != None:
                 logging.debug('response is %s' % (response))
-                ReceiveResponse.objects.create(ticket=tick, response=response)
+                resp = ReceiveResponse.objects.create(ticket=tick, response=response, name=receive_query_name)
+                # Let's try to do something with this response now!
+                qn = receive_query_name[:-5]
+                logging.info("THAT IS ===> %s" %(qn))
+                if qn in QBXML().names:
+                    # does that model exists ?
+                    ms = get_models()
+                    m = None
+                    for model in ms:
+                        if model.__name__ == 'QB' + qn:
+                            m = model
+                    if m != None:
+                        items = receive_plain[0][0]
+                        for item in items:
+                            t = {}
+                            for it in item:
+                                t.update({convert(it.tag): it.text})
+                            m.objects.create(**t)
+
                 return HttpResponse(close_connection % ('ssss'), content_type='text/xml')
         else:
             logging.debug("This message does not contain response")
