@@ -1,5 +1,6 @@
 import os
 import logging as log
+import re
 
 from django.db.models import get_app, get_models
 from django.shortcuts import HttpResponse
@@ -27,6 +28,15 @@ from quickbooks.uttils import generate_qbc_file
 from quickbooks.uttils import tag
 
 from quickbooks.qbxml import QBXML
+from quickbooks.settings import QUICKBOOKS_RESPONSE
+
+QSETTINGS = None
+if hasattr(settings, 'QUICKBOOKS_RESPONSE'):
+    QSETTINGS = settings.QUICKBOOKS_RESPONSE
+else:
+    QSETTINGS = QUICKBOOKS_RESPONSE
+
+
 
 logging = log.getLogger(__name__)
 
@@ -109,6 +119,8 @@ def home(request):
         logging.debug(root.find(tag('receiveResponseXML')))
         logging.debug(root.findtext(tag('receiveResponseXML')))
         send_request = root[0].find(tag('sendRequestXML'))
+        list_id = None
+        logging.debug('LIST ID ====>> %s', str(list_id))
         logging.debug(send_request)
         if send_request != None:
             logging.debug("sendRequestXML detected tags will appear below:")
@@ -143,16 +155,21 @@ def home(request):
             logging.debug(receive_response.text)
             tick = QWCTicket.objects.get(ticket=ticket.text)
             response = receive_response[1].text
-            receive_plain = etree.fromstring(response)
-            receive_query_name = etree.fromstring(response)[0][0].tag[:-2]
+            request_id = None
+            try:
+                receive_plain = etree.fromstring(response)
+                receive_query_name = etree.fromstring(response)[0][0].tag[:-2]
+            except Exception, e:
+                logging.debug("Error it apears like response is empty")
+                logging.error(e)
             if response != None:
                 logging.debug('response is %s' % (response))
                 resp = ReceiveResponse.objects.create(ticket=tick, response=response, name=receive_query_name)
                 # Let's try to do something with this response now!
-                qn = receive_query_name[:-5]
+                qn = re.sub("([A-Z])", " \g<0>", receive_query_name).split(" ")[1]
                 logging.info("THAT IS ===> %s" %(qn))
                 if qn in QBXML().names:
-                    # does that model exists ?
+                    # does that model name  exists ? if so enter data in that thing
                     ms = get_models()
                     m = None
                     for model in ms:
@@ -160,11 +177,36 @@ def home(request):
                             m = model
                     if m != None:
                         items = receive_plain[0][0]
+                        logging.debug('items are ==> %s', str(items))
                         for item in items:
                             t = {}
                             for it in item:
+                                logging.debug('items => %s' %(str(it.tag)))
+                                if it.tag == 'ListID':
+                                    list_id = it.text
+                                    logging.debug("listid is %s" %(str(list_id)))
                                 t.update({convert(it.tag): it.text})
-                            m.objects.create(**t)
+                            # but first.. does that already exists ?
+                            logging.debug("qbwc %s" %(t))
+
+                            m.objects.update_or_create(list_id=t['list_id'], defaults=t)
+                            # Do something if this response was a Response , maybe update the database with relationship?
+                            logging.debug('Check if we need to do something after handling with a response')
+
+                            # First get related objects of the selected model hope it is only one.
+                            request_id = receive_plain[0][0].attrib['requestID']
+                            if list_id and request_id:
+                                logging.debug(request_id)
+                                for md in m._meta.get_all_related_objects():
+                                    logging.debug('Looking for models')
+                                    logging.debug(md)
+                                    mod = md.model.objects.get(pk=request_id)
+                                    mod.quickbooks = m.objects.get(pk=list_id)
+                                    mod.save()
+
+                            else:
+                                logging.debug('Nothing found in settings')
+
 
                 return HttpResponse(close_connection % ('ssss'), content_type='text/xml')
         else:
@@ -178,4 +220,5 @@ def welcome(request):
 
 def get_company_file(request):
     response = HttpResponse(generate_qbc_file(), content_type='text/xml')
-    response['Content-Disposition'] = 'attachment; filename="quickbooks"'
+    response['Content-Disposition'] = 'attachment; filename="quickbooks.QWC"'
+    return response
