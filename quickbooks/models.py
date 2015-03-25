@@ -207,3 +207,42 @@ class QBInvoice(models.Model):
 
     def __str__(self):
         return self.subtotal
+
+class QBItem(models.Model):
+    item_desc = models.CharField(max_length=2500, blank=True, null=True) # ItemDesc
+    item_group_line = models.CharField(max_length=2500, blank=True, null=True) # ItemGroupLine
+    sales_tax_code_ref = models.CharField(max_length=2500, blank=True, null=True) # SalesTaxCodeRef
+    edit_sequence = models.CharField(max_length=2500, blank=True, null=True) # EditSequence
+    average_cost = models.CharField(max_length=2500, blank=True, null=True) # AverageCost
+    tax_vendor_ref = models.CharField(max_length=2500, blank=True, null=True) # TaxVendorRef
+    tax_rate = models.CharField(max_length=2500, blank=True, null=True) # TaxRate
+    quantity_on_order = models.CharField(max_length=2500, blank=True, null=True) # QuantityOnOrder
+    sales_and_purchase = models.CharField(max_length=2500, blank=True, null=True) # SalesAndPurchase
+    purchase_cost = models.CharField(max_length=2500, blank=True, null=True) # PurchaseCost
+    list_id = models.CharField(max_length=2500, primary_key=True) # ListID
+    cogs_account_ref = models.CharField(max_length=2500, blank=True, null=True) # COGSAccountRef
+    discount_rate_percent = models.CharField(max_length=2500, blank=True, null=True) # DiscountRatePercent
+    reorder_point = models.CharField(max_length=2500, blank=True, null=True) # ReorderPoint
+    purchase_desc = models.CharField(max_length=2500, blank=True, null=True) # PurchaseDesc
+    pref_vendor_ref = models.CharField(max_length=2500, blank=True, null=True) # PrefVendorRef
+    quantity_on_sales_order = models.CharField(max_length=2500, blank=True, null=True) # QuantityOnSalesOrder
+    name = models.CharField(max_length=2500, blank=True, null=True) # Name
+    sublevel = models.CharField(max_length=2500, blank=True, null=True) # Sublevel
+    income_account_ref = models.CharField(max_length=2500, blank=True, null=True) # IncomeAccountRef
+    quantity_on_hand = models.CharField(max_length=2500, blank=True, null=True) # QuantityOnHand
+    discount_rate = models.CharField(max_length=2500, blank=True, null=True) # DiscountRate
+    sales_or_purchase = models.CharField(max_length=2500, blank=True, null=True) # SalesOrPurchase
+    account_ref = models.CharField(max_length=2500, blank=True, null=True) # AccountRef
+    is_print_items_in_group = models.CharField(max_length=2500, blank=True, null=True) # IsPrintItemsInGroup
+    time_created = models.CharField(max_length=2500, blank=True, null=True) # TimeCreated
+    sales_desc = models.CharField(max_length=2500, blank=True, null=True) # SalesDesc
+    asset_account_ref = models.CharField(max_length=2500, blank=True, null=True) # AssetAccountRef
+    time_modified = models.CharField(max_length=2500, blank=True, null=True) # TimeModified
+    parent_ref = models.CharField(max_length=2500, blank=True, null=True) # ParentRef
+    full_name = models.CharField(max_length=2500, blank=True, null=True) # FullName
+    sales_price = models.CharField(max_length=2500, blank=True, null=True) # SalesPrice
+    is_active = models.CharField(max_length=2500, blank=True, null=True) # IsActive
+
+    def __unicode__(self):
+        return unicode(self.full_name)
+        # return "ss"

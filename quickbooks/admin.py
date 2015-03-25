@@ -8,6 +8,7 @@ from quickbooks.models import QBAccount
 from quickbooks.models import QBCheck
 from quickbooks.models import QBEstimate
 from quickbooks.models import QBInvoice
+from quickbooks.models import QBItem
 
 
 class QBCustomerAdmin(admin.ModelAdmin):
@@ -42,3 +43,4 @@ admin.site.register(QBCheck, QBCheckAdmin)
 admin.site.register(QBAccount, QBAccountAdmin)
 admin.site.register(MessageQue)
 admin.site.register(QBCustomer, QBCustomerAdmin)
+admin.site.register(QBItem)

@@ -145,6 +145,9 @@ def home(request):
                 for repeat in repeats:
                     repeat.active = True
                     repeat.save()
+                # delete tickets and messages that are not in use:
+                MessageQue.objects.filter(repeat=False, active=False).delete()
+                QWCTicket.objects.filter(active=False).delete()
                 return HttpResponse(close_connection % ("Finished!"), content_type='text/xml')
 
             return HttpResponse(close_connection % (100), content_type='text/xml')
@@ -176,6 +179,7 @@ def home(request):
                         if model.__name__ == 'QB' + qn:
                             m = model
                     if m != None:
+                        logging.debug("Model does exist")
                         items = receive_plain[0][0]
                         logging.debug('items are ==> %s', str(items))
                         for item in items:
@@ -188,8 +192,10 @@ def home(request):
                                 t.update({convert(it.tag): it.text})
                             # but first.. does that already exists ?
                             logging.debug("qbwc %s" %(t))
-
-                            m.objects.update_or_create(list_id=t['list_id'], defaults=t)
+                            if list_id:
+                                m.objects.update_or_create(list_id=t['list_id'], defaults=t)
+                            else:
+                                logging.debug("no list_id strange ?? ")
                             # Do something if this response was a Response , maybe update the database with relationship?
                             logging.debug('Check if we need to do something after handling with a response')
 
@@ -200,12 +206,36 @@ def home(request):
                                 for md in m._meta.get_all_related_objects():
                                     logging.debug('Looking for models')
                                     logging.debug(md)
-                                    mod = md.model.objects.get(pk=request_id)
-                                    mod.quickbooks = m.objects.get(pk=list_id)
-                                    mod.save()
+                                    mod = md.model.objects.filter(pk=request_id)[0]
+                                    if mod:
+                                        mod.quickbooks = m.objects.get(pk=list_id)
+                                        mod.save()
 
                             else:
                                 logging.debug('Nothing found in settings')
+
+                    else:
+                        if settings.DEBUG:
+
+                            logging.debug("Model does not exist")
+                            # this model does not exist, what about making a file with all it's data maybe we can use it
+                            # Dump it only if debug is set to True (DEBUG=True)
+                            # if it does not catch here remember to look in qbxml().names
+                            items = receive_plain[0][0]
+                            with(open(os.path.join(settings.BASE_DIR, '..', str(qn) + '_model.txt'), 'w+')) as f:
+                                f.write("class QB%s(models.Model):\n" %(qn))
+                                keys = []
+                                for item in items:
+                                    t = {}
+                                    for it in item:
+                                        keys.append(it.tag)
+                                for key in set(keys):
+                                    if key == 'ListID':
+                                        f.write("    %s = models.CharField(max_length=2500, primary_key=True) # %s\n" %(convert(key), key))
+                                    else:
+                                        f.write("    %s = models.CharField(max_length=2500, blank=True, null=True) # %s\n" %(convert(key), key))
+                                logging.debug('writed the class in a txt file please copy and paste it in your models')
+
 
 
                 return HttpResponse(close_connection % ('ssss'), content_type='text/xml')
@@ -213,6 +243,21 @@ def home(request):
             logging.debug("This message does not contain response")
     logging.info("Calling close")
     return HttpResponse(close_connection % ('closed!!!'), content_type='text/xml')
+
+def get_items():
+    for item in items:
+        for element in item:
+            tag_set.append(element.tag)
+            for tag in element:
+                tag_set.append(tag.tag)
+
+    all_tags = set(tag_set)
+    for t in all_tags:
+        with(open('play_c_fields.py', 'a+')) as f:
+            print(t)
+            f.write("%s = models.CharField(max_length=255, blank=True, null=True) # %s \n" %(convert(t), t))
+
+
 
 
 def welcome(request):
