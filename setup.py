@@ -10,8 +10,6 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 setup(
     name='django-quickbooks',
     version='0.2',
-    packages=['quickbooks'],
-    include_package_data=True,
     license='BSD License',  # example license
     description='Quickbooks integration with Django.',
     long_description=README,
@@ -30,4 +28,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
+    include_package_data=True,
+    packages=['quickbooks'],
 )
