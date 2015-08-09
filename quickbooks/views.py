@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate
 from lxml import etree
 
 from quickbooks.models import QWCTicket
-from quickbooks.models import UserProfile
+from quickbooks.models import DjangoUserProfile
 from quickbooks.models import ReceiveResponse
 from quickbooks.models import MessageQue
 
@@ -107,7 +107,7 @@ def home(request):
             try:
                 profile = t.user.userprofile
             except Exception as e:
-                profile = UserProfile.objects.create(user=t.user)
+                profile = DjangoUserProfile.objects.create(user=t.user)
             if company_file_location is not None:
                 if company_file_location != profile.company_file:
                     profile.company_file = company_file_location.text

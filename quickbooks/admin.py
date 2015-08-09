@@ -1,6 +1,6 @@
 from django.contrib import admin
 from quickbooks.models import QWCTicket
-from quickbooks.models import UserProfile
+from quickbooks.models import DjangoUserProfile
 from quickbooks.models import ReceiveResponse
 from quickbooks.models import MessageQue
 from quickbooks.models import QBCustomer
@@ -35,7 +35,7 @@ class QBAccountAdmin(admin.ModelAdmin):
 
 
 admin.site.register(QWCTicket)
-admin.site.register(UserProfile)
+admin.site.register(DjangoUserProfile)
 admin.site.register(ReceiveResponse, ReceiveResponseAdmin)
 admin.site.register(QBInvoice, QBInvoiceAdmin)
 admin.site.register(QBEstimate, QBEstimateAdmin)

@@ -20,7 +20,7 @@ class ReceiveResponse(models.Model):
     def __str__(self):
         return "%s" %(self.ticket)
 
-class UserProfile(models.Model):
+class DjangoUserProfile(models.Model):
     user = models.OneToOneField(User)
     company_file = models.CharField(max_length=2500, default='', blank=True)
     major_version = models.CharField(max_length=2500, default='', blank=True)
