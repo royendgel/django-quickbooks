@@ -1,15 +1,5 @@
 from django.contrib import admin
-from quickbooks.models import QWCTicket
-from quickbooks.models import DjangoUserProfile
-from quickbooks.models import ReceiveResponse
-from quickbooks.models import MessageQue
-from quickbooks.models import QBCustomer
-from quickbooks.models import QBAccount
-from quickbooks.models import QBCheck
-from quickbooks.models import QBEstimate
-from quickbooks.models import QBInvoice
-from quickbooks.models import QBItem
-
+from quickbooks.models import *
 
 class QBCustomerAdmin(admin.ModelAdmin):
     ordering = ['name']
@@ -35,7 +25,7 @@ class QBAccountAdmin(admin.ModelAdmin):
 
 
 admin.site.register(QWCTicket)
-admin.site.register(DjangoUserProfile)
+admin.site.register(UserProfile)
 admin.site.register(ReceiveResponse, ReceiveResponseAdmin)
 admin.site.register(QBInvoice, QBInvoiceAdmin)
 admin.site.register(QBEstimate, QBEstimateAdmin)
@@ -44,3 +34,5 @@ admin.site.register(QBAccount, QBAccountAdmin)
 admin.site.register(MessageQue)
 admin.site.register(QBCustomer, QBCustomerAdmin)
 admin.site.register(QBItem)
+admin.site.register(QBVendor)
+admin.site.register(QBBill)

@@ -1,11 +1,19 @@
+from datetime import datetime, timedelta
+
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
+from django.utils.timezone import make_aware
+from django.utils import timezone
+
 from uuidfield import UUIDField
 
-from quickbooks.qbxml import QBXML
+
+from quickbooks.qbxml import *
+from quickbooks.qwc_xml import REQUEST_TYPES
+
 class QWCTicket(models.Model):
     ticket = UUIDField(auto=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -20,8 +28,72 @@ class ReceiveResponse(models.Model):
     def __str__(self):
         return "%s" %(self.ticket)
 
-class DjangoUserProfile(models.Model):
-    user = models.OneToOneField(User)
+class ResponseError(models.Model):
+
+    status_code = models.PositiveIntegerField()
+    content = models.TextField(blank=True, null=True)
+    reason_phrase = models.TextField(blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+    processed = models.BooleanField(default=False)
+
+    @staticmethod
+    def log_error(request, exception):
+        print("LOGGING ERROR: %s and exception %s" % (type(request), type(exception)))
+        content_type = request.META.get("CONTENT_TYPE")
+        method = request.method
+        if method == 'POST':
+            return ResponseError.objects.create(
+                status_code=500,
+                content=exception.message,
+                reason_phrase=exception.message
+            )
+        return None
+
+    @staticmethod
+    def get_last_error():
+        try:
+            error = ResponseError.objects.filter(processed=False).latest("date")
+            error.processed = True
+            error.save()
+            return error
+        except ResponseError.DoesNotExist:
+            return None
+
+class QWCMessage(models.Model):
+    request_type = models.CharField(max_length=255, choices=REQUEST_TYPES)
+    description = models.TextField(blank=True, null=True)
+    message = models.TextField(blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+
+def get_errors_and_messages(date=None):
+    if not date:
+        date = timezone.now() - timedelta(hours=24)
+    message_list = []
+    errors = ResponseError.objects.filter(date__gte=date).order_by('-date')
+    for error in errors:
+        message_list.append(dict(
+                date=error.date,
+                message=error.content,
+                error=True,
+            ))
+
+    messages = QWCMessage.objects.filter(date__gte=date).order_by('-date')
+    for message in messages:
+        message_list.append(dict(
+                date=message.date,
+                message=message.get_request_type_display(),
+                error=False
+            ))
+
+    # Sort all messages
+    message_list.sort(key=lambda message: message.get("date"), reverse=True)
+    return message_list
+
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL)
     company_file = models.CharField(max_length=2500, default='', blank=True)
     major_version = models.CharField(max_length=2500, default='', blank=True)
     minor_version = models.CharField(max_length=2500, default='', blank=True)
@@ -32,7 +104,7 @@ class DjangoUserProfile(models.Model):
 class MessageQue(models.Model):
     name = models.CharField(default='Query', max_length=2500)
     description = models.TextField(blank=True, null=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     message = models.TextField()
     active = models.BooleanField(default=True)
     repeat = models.BooleanField(default=False)
@@ -82,6 +154,32 @@ class QBCustomer(models.Model):
 
     def __str__(self):
         return "%s" %(self.name.encode('utf-8'))
+
+class QBEmployee(models.Model):
+
+    list_id = models.CharField(max_length=2500, primary_key=True)  # ListID
+    first_name = models.CharField(max_length=2500, blank=True, null=True)  # FirstName
+    middle_name = models.CharField(max_length=2500, blank=True, null=True)  # MiddleName
+    last_name = models.CharField(max_length=2500, blank=True, null=True)  # LastName
+    full_name = models.CharField(max_length=2500, blank=True, null=True)  # FullName
+    name = models.CharField(max_length=2500, blank=True, null=True)  # Name
+
+    notes = models.CharField(max_length=2500, blank=True, null=True)  # Notes
+    phone = models.CharField(max_length=2500, blank=True, null=True)  # Phone
+    fax = models.CharField(max_length=2500, blank=True, null=True)  # Fax
+    city = models.CharField(max_length=2500, blank=True, null=True)  # City
+    contact = models.CharField(max_length=2500, blank=True, null=True)  # Contact
+    account_number = models.CharField(max_length=2500, blank=True, null=True)  # AccountNumber
+    company_name = models.CharField(max_length=2500, blank=True, null=True)  # CompanyName
+    is_active = models.CharField(max_length=2500, blank=True, null=True)  # IsActive
+    edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
+    time_created = models.CharField(max_length=2500, blank=True, null=True)  # TimeCreated
+    time_modified = models.CharField(max_length=2500, blank=True, null=True)  # TimeModified
+    salutation = models.CharField(max_length=2500, blank=True, null=True)  # Salutation
+    email = models.CharField(max_length=2500, blank=True, null=True)  # Email
+
+    def __str__(self):
+        return "%s, %s" % (self.last_name, self.first_name)
 
 class QBAccount(models.Model):
     cash_flow_classification = models.CharField(max_length=2500, blank=True, null=True)  # CashFlowClassification
@@ -204,9 +302,19 @@ class QBInvoice(models.Model):
     list_id = models.CharField(max_length=2500, primary_key=True)  # ListID
     is_pending = models.CharField(max_length=2500, blank=True, null=True)  # IsPending
     edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
+    invoice_line_add = models.ManyToManyField("QBInvoiceLineAdd", blank=True, null=True)
 
     def __str__(self):
         return self.subtotal
+
+class QBInvoiceLineAdd(models.Model):
+    desc = models.CharField(max_length=2500, blank=True, null=True)
+    quantity = models.CharField(max_length=2500, blank=True, null=True)
+    unit_of_measure = models.CharField(max_length=2500, blank=True, null=True)
+    amount = models.CharField(max_length=2500, blank=True, null=True)
+
+    def __unicode__(self):
+        return self.desc
 
 class QBItem(models.Model):
     item_desc = models.CharField(max_length=2500, blank=True, null=True) # ItemDesc
@@ -231,7 +339,7 @@ class QBItem(models.Model):
     income_account_ref = models.CharField(max_length=2500, blank=True, null=True) # IncomeAccountRef
     quantity_on_hand = models.CharField(max_length=2500, blank=True, null=True) # QuantityOnHand
     discount_rate = models.CharField(max_length=2500, blank=True, null=True) # DiscountRate
-    sales_or_purchase = models.CharField(max_length=2500, blank=True, null=True) # SalesOrPurchase
+    sales_or_purchase = models.ForeignKey("QBSalesOrPurchase", blank=True, null=True) # SalesOrPurchase
     account_ref = models.CharField(max_length=2500, blank=True, null=True) # AccountRef
     is_print_items_in_group = models.CharField(max_length=2500, blank=True, null=True) # IsPrintItemsInGroup
     time_created = models.CharField(max_length=2500, blank=True, null=True) # TimeCreated
@@ -244,5 +352,91 @@ class QBItem(models.Model):
     is_active = models.CharField(max_length=2500, blank=True, null=True) # IsActive
 
     def __unicode__(self):
-        return unicode(self.full_name)
+        return unicode(self.name) 
         # return "ss"
+
+class QBSalesOrPurchase(models.Model):
+
+    price = models.CharField(max_length=2500, blank=True, null=True)
+    account_ref = models.ForeignKey("QBAccount", blank=True, null=True)
+
+
+class QBVendor(models.Model):
+
+    name = models.CharField(max_length=2500, blank=True, null=True)
+    first_name = models.CharField(max_length=2500, blank=True, null=True)  # FirstName
+    middle_name = models.CharField(max_length=2500, blank=True, null=True)  # MiddleName
+    last_name = models.CharField(max_length=2500, blank=True, null=True)  # LastName
+    full_name = models.CharField(max_length=2500, blank=True, null=True)  # FullName
+    company_name = models.CharField(max_length=2500, blank=True, null=True) # CompanyName
+    salutation = models.CharField(max_length=2500, blank=True, null=True)  # Salutation
+    job_title = models.CharField(max_length=2500, blank=True, null=True)  # JobTitle
+    phone = models.CharField(max_length=2500, blank=True, null=True)  # Phone
+    alt_phone = models.CharField(max_length=2500, blank=True, null=True)  # AltPhone
+    fax = models.CharField(max_length=2500, blank=True, null=True)  # Fax
+    email = models.CharField(max_length=2500, blank=True, null=True)  # Email
+    contact = models.CharField(max_length=2500, blank=True, null=True)  # Contact
+    alt_contact = models.CharField(max_length=2500, blank=True, null=True)  # AltContact
+    notes = models.CharField(max_length=2500, blank=True, null=True)  # Notes
+    account_number = models.CharField(max_length=2500, blank=True, null=True)  # AccountNumber
+    credit_limit = models.CharField(max_length=2500, blank=True, null=True)  # CreditLimit
+    vendor_tax_ident = models.CharField(max_length=2500, blank=True, null=True)
+    list_id = models.CharField(max_length=2500, primary_key=True)  # ListID
+    is_pending = models.CharField(max_length=2500, blank=True, null=True)  # IsPending
+    edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
+
+    def __unicode__(self):
+        return unicode(self.full_name)
+
+class QBBill(models.Model):
+
+    txn_date = models.CharField(max_length=255, blank=True, null=True) # TxnDate
+    txn_id = models.CharField(max_length=255, primary_key=True) # TxnID
+    due_date = models.CharField(max_length=255, blank=True, null=True) # DueDate
+    ref_number = models.CharField(max_length=2500, blank=True, null=True) # RefNumber
+    memo = models.CharField(max_length=2500, blank=True, null=True) # Memo
+    exchange_rate = models.CharField(max_length=2500, blank=True, null=True) # ExchangeRate
+
+    is_pending = models.CharField(max_length=2500, blank=True, null=True)  # IsPending
+    is_paid = models.CharField(max_length=2500, blank=True, null=True) # IsPaid
+    edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
+    vendor_ref = models.ForeignKey("QBVendor", blank=True, null=True) # VendorRef
+
+    expense_line_add = models.ManyToManyField("ExpenseLineAdd", blank=True, null=True)
+    item_line_add = models.ManyToManyField("QBItemLineAdd", blank=True, null=True)
+
+
+class ExpenseLineAdd(models.Model):
+
+    account_ref = models.ForeignKey("QBAccount", blank=True, null=True) # AccountRef
+    amount = models.CharField(max_length=2500, blank=True, null=True) # Amount
+    memo = models.CharField(max_length=2500, blank=True, null=True)
+    customer_ref = models.ForeignKey("QBCustomer", blank=True, null=True)
+
+
+class QBItemLineAdd(models.Model):
+
+    item_ref = models.ForeignKey("QBItem", blank=True, null=True) # ItemRef
+    serial_number = models.CharField(max_length=255, blank=True, null=True) # SerialNumber
+    lot_number = models.CharField(max_length=255, blank=True, null=True) # LotNumber
+    desc = models.CharField(max_length=255, blank=True, null=True) # Desc
+    quantity = models.CharField(max_length=255, blank=True, null=True) # Quantity
+    amount = models.CharField(max_length=2500, blank=True, null=True) # Amount
+    cost = models.CharField(max_length=255, blank=True, null=True) # Cost
+    unit_of_measure = models.CharField(max_length=255, blank=True, null=True) # UnitOfMeasure
+    memo = models.CharField(max_length=2500, blank=True, null=True) # Memo
+    customer_ref = models.ForeignKey("QBCustomer", blank=True, null=True) # CustomerRef
+    sales_rep_ref = models.ForeignKey("QBEmployee", blank=True, null=True)
+
+
+class QBItemPayment(models.Model):
+
+    list_id = models.CharField(max_length=2500, primary_key=True)  # ListID
+    name = models.CharField(max_length=255, blank=True, null=True) # Name
+    item_desc = models.CharField(max_length=255, blank=True, null=True) # ItemDesc
+    edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
+    time_created = models.CharField(max_length=2500, blank=True, null=True)  # TimeCreated
+    time_modified = models.CharField(max_length=2500, blank=True, null=True)  # TimeModified
+    
+    def __unicode__(self):
+        return self.name
