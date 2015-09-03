@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-quickbooks',
-    version='0.3',
+    version='0.4',
     license='BSD License',  # example license
     description='Quickbooks integration with Django.',
     long_description=README,
