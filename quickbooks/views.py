@@ -105,7 +105,7 @@ def home(request):
 
             # update the company_file location if it's not updated.
             try:
-                profile = t.user.userprofile
+                profile = t.user.djangouserprofile
             except Exception as e:
                 profile = DjangoUserProfile.objects.create(user=t.user)
             if company_file_location is not None:
