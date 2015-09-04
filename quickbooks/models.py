@@ -307,6 +307,7 @@ class QBInvoice(models.Model):
     def __str__(self):
         return self.subtotal
 
+    
 class QBInvoiceLineAdd(models.Model):
     desc = models.CharField(max_length=2500, blank=True, null=True)
     quantity = models.CharField(max_length=2500, blank=True, null=True)
