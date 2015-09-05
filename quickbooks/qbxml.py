@@ -70,6 +70,7 @@ class QBXML:
 
         return c
 
+    @staticmethod
     def __build_xml(self, name, method='query', request='rq', request_id=None, options={}):
         request_id = '22222'
         internal_options = {'@requestID': request_id, }
@@ -282,7 +283,7 @@ class QBXML:
                                   message=self.__build_xml_add_mod('Invoice', 'Add', 'rq', options=options,
                                                                    request_id=ident), user=self.user)
 
-    def get_customers(self, date_from=None, max_returned=5):
+    def get_customers(self, date_from=None, max_returned=5, iterators=None):
         """
         :param date_from: need to be a date in format "2014-06-05"
         :param  max_returned: integer  eg "5"
@@ -292,6 +293,9 @@ class QBXML:
         from quickbooks.models import MessageQue
         name = 'Get All Customers'
         options = {}
+        if iterators:
+            options.update({'@iterator': 'Start'})
+
         if max_returned:
             options.update({'MaxReturned' : max_returned})
 
