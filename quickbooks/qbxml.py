@@ -282,15 +282,19 @@ class QBXML:
                                   message=self.__build_xml_add_mod('Invoice', 'Add', 'rq', options=options,
                                                                    request_id=ident), user=self.user)
 
-    def get_customers(self, date_from=None):
+    def get_customers(self, date_from=None, max_returned=5):
         """
         :param date_from: need to be a date in format "2014-06-05"
+        :param  max_returned: integer  eg "5"
         :return:
         """
         # This will get all customers FIXME: add FROM option
         from quickbooks.models import MessageQue
         name = 'Get All Customers'
         options = {}
+        if max_returned:
+            options.update({'MaxReturned' : max_returned})
+
         if date_from:
             options.update({'FromModifiedDate': date_from})
 
