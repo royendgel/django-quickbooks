@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import uuid
+
 from django.db import models, migrations
 from django.conf import settings
-import uuidfield.fields
 
 
 class Migration(migrations.Migration):
@@ -34,7 +35,7 @@ class Migration(migrations.Migration):
                 ('active', models.BooleanField(default=True)),
                 ('repeat', models.BooleanField(default=False)),
                 ('last_accessed', models.TimeField(auto_now=True)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -332,9 +333,9 @@ class Migration(migrations.Migration):
                 ('cost', models.CharField(max_length=255, null=True, blank=True)),
                 ('unit_of_measure', models.CharField(max_length=255, null=True, blank=True)),
                 ('memo', models.CharField(max_length=2500, null=True, blank=True)),
-                ('customer_ref', models.ForeignKey(blank=True, to='quickbooks.QBCustomer', null=True)),
-                ('item_ref', models.ForeignKey(blank=True, to='quickbooks.QBItem', null=True)),
-                ('sales_rep_ref', models.ForeignKey(blank=True, to='quickbooks.QBEmployee', null=True)),
+                ('customer_ref', models.ForeignKey(blank=True, to='quickbooks.QBCustomer', null=True, on_delete=models.CASCADE)),
+                ('item_ref', models.ForeignKey(blank=True, to='quickbooks.QBItem', null=True, on_delete=models.CASCADE)),
+                ('sales_rep_ref', models.ForeignKey(blank=True, to='quickbooks.QBEmployee', null=True, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -359,7 +360,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('price', models.CharField(max_length=2500, null=True, blank=True)),
-                ('account_ref', models.ForeignKey(blank=True, to='quickbooks.QBAccount', null=True)),
+                ('account_ref', models.ForeignKey(blank=True, to='quickbooks.QBAccount', null=True, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -411,9 +412,9 @@ class Migration(migrations.Migration):
             name='QWCTicket',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('ticket', uuidfield.fields.UUIDField(unique=True, max_length=32, editable=False, blank=True)),
+                ('ticket', models.CharField(unique=True, max_length=32, editable=False, blank=True, default=uuid.uuid4)),
                 ('active', models.BooleanField(default=True)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -426,7 +427,7 @@ class Migration(migrations.Migration):
                 ('response', models.TextField()),
                 ('processed', models.BooleanField(default=False)),
                 ('name', models.CharField(default=b'', max_length=2500, null=True, blank=True)),
-                ('ticket', models.ForeignKey(to='quickbooks.QWCTicket')),
+                ('ticket', models.ForeignKey(to='quickbooks.QWCTicket', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -453,7 +454,7 @@ class Migration(migrations.Migration):
                 ('company_file', models.CharField(default=b'', max_length=2500, blank=True)),
                 ('major_version', models.CharField(default=b'', max_length=2500, blank=True)),
                 ('minor_version', models.CharField(default=b'', max_length=2500, blank=True)),
-                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -462,7 +463,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='qbitem',
             name='sales_or_purchase',
-            field=models.ForeignKey(blank=True, to='quickbooks.QBSalesOrPurchase', null=True),
+            field=models.ForeignKey(blank=True, to='quickbooks.QBSalesOrPurchase', null=True, on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -480,19 +481,19 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='qbbill',
             name='vendor_ref',
-            field=models.ForeignKey(blank=True, to='quickbooks.QBVendor', null=True),
+            field=models.ForeignKey(blank=True, to='quickbooks.QBVendor', null=True, on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='expenselineadd',
             name='account_ref',
-            field=models.ForeignKey(blank=True, to='quickbooks.QBAccount', null=True),
+            field=models.ForeignKey(blank=True, to='quickbooks.QBAccount', null=True, on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='expenselineadd',
             name='customer_ref',
-            field=models.ForeignKey(blank=True, to='quickbooks.QBCustomer', null=True),
+            field=models.ForeignKey(blank=True, to='quickbooks.QBCustomer', null=True, on_delete=models.CASCADE),
             preserve_default=True,
         ),
     ]

@@ -25,7 +25,6 @@ class QBAccountAdmin(admin.ModelAdmin):
 
 
 admin.site.register(QWCTicket)
-admin.site.register(UserProfile)
 admin.site.register(ReceiveResponse, ReceiveResponseAdmin)
 admin.site.register(QBInvoice, QBInvoiceAdmin)
 admin.site.register(QBEstimate, QBEstimateAdmin)

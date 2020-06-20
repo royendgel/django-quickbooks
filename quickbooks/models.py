@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta
 
 from django.db import models
@@ -5,31 +6,30 @@ from django.conf import settings
 from django.utils.timezone import make_aware
 from django.utils import timezone
 
-from uuidfield import UUIDField
-
-
 from quickbooks.qbxml import *
 from quickbooks.qwc_xml import REQUEST_TYPES
 
+
 class QWCTicket(models.Model):
-    ticket = UUIDField(auto=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    ticket = models.CharField(default=uuid.uuid4, max_length=255)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     active = models.BooleanField(default=True)
 
     def __str__(self):
-        return "%s | %s" %(self.user, self.ticket)
+        return "%s | %s" % (self.user, self.ticket)
+
 
 class ReceiveResponse(models.Model):
-    ticket = models.ForeignKey(QWCTicket)
+    ticket = models.ForeignKey(QWCTicket, on_delete=models.CASCADE)
     response = models.TextField()
     processed = models.BooleanField(default=False)
     name = models.CharField(blank=True, null=True, default='', max_length=2500)
 
     def __str__(self):
-        return "%s" %(self.ticket)
+        return "%s" % (self.ticket)
+
 
 class ResponseError(models.Model):
-
     status_code = models.PositiveIntegerField()
     content = models.TextField(blank=True, null=True)
     reason_phrase = models.TextField(blank=True, null=True)
@@ -59,6 +59,7 @@ class ResponseError(models.Model):
         except ResponseError.DoesNotExist:
             return None
 
+
 class QWCMessage(models.Model):
     request_type = models.CharField(max_length=255, choices=REQUEST_TYPES)
     description = models.TextField(blank=True, null=True)
@@ -73,45 +74,36 @@ def get_errors_and_messages(date=None):
     errors = ResponseError.objects.filter(date__gte=date).order_by('-date')
     for error in errors:
         message_list.append(dict(
-                date=error.date,
-                message=error.content,
-                error=True,
-            ))
+            date=error.date,
+            message=error.content,
+            error=True,
+        ))
 
     messages = QWCMessage.objects.filter(date__gte=date).order_by('-date')
     for message in messages:
         message_list.append(dict(
-                date=message.date,
-                message=message.get_request_type_display(),
-                error=False
-            ))
+            date=message.date,
+            message=message.get_request_type_display(),
+            error=False
+        ))
 
     # Sort all messages
     message_list.sort(key=lambda message: message.get("date"), reverse=True)
     return message_list
 
 
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL)
-    company_file = models.CharField(max_length=2500, default='', blank=True)
-    major_version = models.CharField(max_length=2500, default='', blank=True)
-    minor_version = models.CharField(max_length=2500, default='', blank=True)
-
-    def __str__(self):
-        return "%s" %(self.user)
-
 class MessageQue(models.Model):
     name = models.CharField(default='Query', max_length=2500)
     description = models.TextField(blank=True, null=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     message = models.TextField()
     active = models.BooleanField(default=True)
     repeat = models.BooleanField(default=False)
     last_accessed = models.TimeField(auto_now=True)
 
     def __str__(self):
-        return "%s | %s => %s" %(self.user, self.active, self.name)
+        return "%s | %s => %s" % (self.user, self.active, self.name)
+
 
 class QBCustomer(models.Model):
     state = models.CharField(max_length=2500, blank=True, null=True)  # State
@@ -153,10 +145,10 @@ class QBCustomer(models.Model):
     email = models.CharField(max_length=2500, blank=True, null=True)  # Email
 
     def __str__(self):
-        return "%s" %(self.name.encode('utf-8'))
+        return "%s" % (self.name.encode('utf-8'))
+
 
 class QBEmployee(models.Model):
-
     list_id = models.CharField(max_length=2500, primary_key=True)  # ListID
     first_name = models.CharField(max_length=2500, blank=True, null=True)  # FirstName
     middle_name = models.CharField(max_length=2500, blank=True, null=True)  # MiddleName
@@ -181,6 +173,7 @@ class QBEmployee(models.Model):
     def __str__(self):
         return "%s, %s" % (self.last_name, self.first_name)
 
+
 class QBAccount(models.Model):
     cash_flow_classification = models.CharField(max_length=2500, blank=True, null=True)  # CashFlowClassification
     account_number = models.CharField(max_length=2500, blank=True, null=True)  # AccountNumber
@@ -201,6 +194,7 @@ class QBAccount(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class QBCheck(models.Model):
     time_modified = models.CharField(max_length=2500, blank=True, null=True)  # TimeModified
@@ -229,6 +223,7 @@ class QBCheck(models.Model):
 
     def __str__(self):
         return self.memo
+
 
 class QBEstimate(models.Model):
     bill_address = models.CharField(max_length=2500, blank=True, null=True)  # BillAddress
@@ -261,6 +256,7 @@ class QBEstimate(models.Model):
 
     def __str__(self):
         return self.full_name
+
 
 class QBInvoice(models.Model):
     addr1 = models.CharField(max_length=2500, blank=True, null=True)  # Addr1
@@ -302,12 +298,12 @@ class QBInvoice(models.Model):
     list_id = models.CharField(max_length=2500, primary_key=True)  # ListID
     is_pending = models.CharField(max_length=2500, blank=True, null=True)  # IsPending
     edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
-    invoice_line_add = models.ManyToManyField("QBInvoiceLineAdd", blank=True, null=True)
+    invoice_line_add = models.ManyToManyField("QBInvoiceLineAdd", blank=True)
 
     def __str__(self):
         return self.subtotal
 
-    
+
 class QBInvoiceLineAdd(models.Model):
     desc = models.CharField(max_length=2500, blank=True, null=True)
     quantity = models.CharField(max_length=2500, blank=True, null=True)
@@ -317,59 +313,60 @@ class QBInvoiceLineAdd(models.Model):
     def __unicode__(self):
         return self.desc
 
+
 class QBItem(models.Model):
-    item_desc = models.CharField(max_length=2500, blank=True, null=True) # ItemDesc
-    item_group_line = models.CharField(max_length=2500, blank=True, null=True) # ItemGroupLine
-    sales_tax_code_ref = models.CharField(max_length=2500, blank=True, null=True) # SalesTaxCodeRef
-    edit_sequence = models.CharField(max_length=2500, blank=True, null=True) # EditSequence
-    average_cost = models.CharField(max_length=2500, blank=True, null=True) # AverageCost
-    tax_vendor_ref = models.CharField(max_length=2500, blank=True, null=True) # TaxVendorRef
-    tax_rate = models.CharField(max_length=2500, blank=True, null=True) # TaxRate
-    quantity_on_order = models.CharField(max_length=2500, blank=True, null=True) # QuantityOnOrder
-    sales_and_purchase = models.CharField(max_length=2500, blank=True, null=True) # SalesAndPurchase
-    purchase_cost = models.CharField(max_length=2500, blank=True, null=True) # PurchaseCost
-    list_id = models.CharField(max_length=2500, primary_key=True) # ListID
-    cogs_account_ref = models.CharField(max_length=2500, blank=True, null=True) # COGSAccountRef
-    discount_rate_percent = models.CharField(max_length=2500, blank=True, null=True) # DiscountRatePercent
-    reorder_point = models.CharField(max_length=2500, blank=True, null=True) # ReorderPoint
-    purchase_desc = models.CharField(max_length=2500, blank=True, null=True) # PurchaseDesc
-    pref_vendor_ref = models.CharField(max_length=2500, blank=True, null=True) # PrefVendorRef
-    quantity_on_sales_order = models.CharField(max_length=2500, blank=True, null=True) # QuantityOnSalesOrder
-    name = models.CharField(max_length=2500, blank=True, null=True) # Name
-    sublevel = models.CharField(max_length=2500, blank=True, null=True) # Sublevel
-    income_account_ref = models.CharField(max_length=2500, blank=True, null=True) # IncomeAccountRef
-    quantity_on_hand = models.CharField(max_length=2500, blank=True, null=True) # QuantityOnHand
-    discount_rate = models.CharField(max_length=2500, blank=True, null=True) # DiscountRate
-    sales_or_purchase = models.ForeignKey("QBSalesOrPurchase", blank=True, null=True) # SalesOrPurchase
-    account_ref = models.CharField(max_length=2500, blank=True, null=True) # AccountRef
-    is_print_items_in_group = models.CharField(max_length=2500, blank=True, null=True) # IsPrintItemsInGroup
-    time_created = models.CharField(max_length=2500, blank=True, null=True) # TimeCreated
-    sales_desc = models.CharField(max_length=2500, blank=True, null=True) # SalesDesc
-    asset_account_ref = models.CharField(max_length=2500, blank=True, null=True) # AssetAccountRef
-    time_modified = models.CharField(max_length=2500, blank=True, null=True) # TimeModified
-    parent_ref = models.CharField(max_length=2500, blank=True, null=True) # ParentRef
-    full_name = models.CharField(max_length=2500, blank=True, null=True) # FullName
-    sales_price = models.CharField(max_length=2500, blank=True, null=True) # SalesPrice
-    is_active = models.CharField(max_length=2500, blank=True, null=True) # IsActive
+    item_desc = models.CharField(max_length=2500, blank=True, null=True)  # ItemDesc
+    item_group_line = models.CharField(max_length=2500, blank=True, null=True)  # ItemGroupLine
+    sales_tax_code_ref = models.CharField(max_length=2500, blank=True, null=True)  # SalesTaxCodeRef
+    edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
+    average_cost = models.CharField(max_length=2500, blank=True, null=True)  # AverageCost
+    tax_vendor_ref = models.CharField(max_length=2500, blank=True, null=True)  # TaxVendorRef
+    tax_rate = models.CharField(max_length=2500, blank=True, null=True)  # TaxRate
+    quantity_on_order = models.CharField(max_length=2500, blank=True, null=True)  # QuantityOnOrder
+    sales_and_purchase = models.CharField(max_length=2500, blank=True, null=True)  # SalesAndPurchase
+    purchase_cost = models.CharField(max_length=2500, blank=True, null=True)  # PurchaseCost
+    list_id = models.CharField(max_length=2500, primary_key=True)  # ListID
+    cogs_account_ref = models.CharField(max_length=2500, blank=True, null=True)  # COGSAccountRef
+    discount_rate_percent = models.CharField(max_length=2500, blank=True, null=True)  # DiscountRatePercent
+    reorder_point = models.CharField(max_length=2500, blank=True, null=True)  # ReorderPoint
+    purchase_desc = models.CharField(max_length=2500, blank=True, null=True)  # PurchaseDesc
+    pref_vendor_ref = models.CharField(max_length=2500, blank=True, null=True)  # PrefVendorRef
+    quantity_on_sales_order = models.CharField(max_length=2500, blank=True, null=True)  # QuantityOnSalesOrder
+    name = models.CharField(max_length=2500, blank=True, null=True)  # Name
+    sublevel = models.CharField(max_length=2500, blank=True, null=True)  # Sublevel
+    income_account_ref = models.CharField(max_length=2500, blank=True, null=True)  # IncomeAccountRef
+    quantity_on_hand = models.CharField(max_length=2500, blank=True, null=True)  # QuantityOnHand
+    discount_rate = models.CharField(max_length=2500, blank=True, null=True)  # DiscountRate
+    sales_or_purchase = models.ForeignKey("QBSalesOrPurchase", blank=True, null=True,
+                                          on_delete=models.CASCADE)  # SalesOrPurchase
+    account_ref = models.CharField(max_length=2500, blank=True, null=True)  # AccountRef
+    is_print_items_in_group = models.CharField(max_length=2500, blank=True, null=True)  # IsPrintItemsInGroup
+    time_created = models.CharField(max_length=2500, blank=True, null=True)  # TimeCreated
+    sales_desc = models.CharField(max_length=2500, blank=True, null=True)  # SalesDesc
+    asset_account_ref = models.CharField(max_length=2500, blank=True, null=True)  # AssetAccountRef
+    time_modified = models.CharField(max_length=2500, blank=True, null=True)  # TimeModified
+    parent_ref = models.CharField(max_length=2500, blank=True, null=True)  # ParentRef
+    full_name = models.CharField(max_length=2500, blank=True, null=True)  # FullName
+    sales_price = models.CharField(max_length=2500, blank=True, null=True)  # SalesPrice
+    is_active = models.CharField(max_length=2500, blank=True, null=True)  # IsActive
 
     def __unicode__(self):
-        return unicode(self.name) 
+        return unicode(self.name)
         # return "ss"
 
-class QBSalesOrPurchase(models.Model):
 
+class QBSalesOrPurchase(models.Model):
     price = models.CharField(max_length=2500, blank=True, null=True)
-    account_ref = models.ForeignKey("QBAccount", blank=True, null=True)
+    account_ref = models.ForeignKey("QBAccount", blank=True, null=True, on_delete=models.CASCADE)
 
 
 class QBVendor(models.Model):
-
     name = models.CharField(max_length=2500, blank=True, null=True)
     first_name = models.CharField(max_length=2500, blank=True, null=True)  # FirstName
     middle_name = models.CharField(max_length=2500, blank=True, null=True)  # MiddleName
     last_name = models.CharField(max_length=2500, blank=True, null=True)  # LastName
     full_name = models.CharField(max_length=2500, blank=True, null=True)  # FullName
-    company_name = models.CharField(max_length=2500, blank=True, null=True) # CompanyName
+    company_name = models.CharField(max_length=2500, blank=True, null=True)  # CompanyName
     salutation = models.CharField(max_length=2500, blank=True, null=True)  # Salutation
     job_title = models.CharField(max_length=2500, blank=True, null=True)  # JobTitle
     phone = models.CharField(max_length=2500, blank=True, null=True)  # Phone
@@ -389,55 +386,52 @@ class QBVendor(models.Model):
     def __unicode__(self):
         return unicode(self.full_name)
 
-class QBBill(models.Model):
 
-    txn_date = models.CharField(max_length=255, blank=True, null=True) # TxnDate
-    txn_id = models.CharField(max_length=255, primary_key=True) # TxnID
-    due_date = models.CharField(max_length=255, blank=True, null=True) # DueDate
-    ref_number = models.CharField(max_length=2500, blank=True, null=True) # RefNumber
-    memo = models.CharField(max_length=2500, blank=True, null=True) # Memo
-    exchange_rate = models.CharField(max_length=2500, blank=True, null=True) # ExchangeRate
+class QBBill(models.Model):
+    txn_date = models.CharField(max_length=255, blank=True, null=True)  # TxnDate
+    txn_id = models.CharField(max_length=255, primary_key=True)  # TxnID
+    due_date = models.CharField(max_length=255, blank=True, null=True)  # DueDate
+    ref_number = models.CharField(max_length=2500, blank=True, null=True)  # RefNumber
+    memo = models.CharField(max_length=2500, blank=True, null=True)  # Memo
+    exchange_rate = models.CharField(max_length=2500, blank=True, null=True)  # ExchangeRate
 
     is_pending = models.CharField(max_length=2500, blank=True, null=True)  # IsPending
-    is_paid = models.CharField(max_length=2500, blank=True, null=True) # IsPaid
+    is_paid = models.CharField(max_length=2500, blank=True, null=True)  # IsPaid
     edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
-    vendor_ref = models.ForeignKey("QBVendor", blank=True, null=True) # VendorRef
+    vendor_ref = models.ForeignKey("QBVendor", blank=True, null=True, on_delete=models.CASCADE)  # VendorRef
 
-    expense_line_add = models.ManyToManyField("ExpenseLineAdd", blank=True, null=True)
-    item_line_add = models.ManyToManyField("QBItemLineAdd", blank=True, null=True)
+    expense_line_add = models.ManyToManyField("ExpenseLineAdd", blank=True)
+    item_line_add = models.ManyToManyField("QBItemLineAdd", blank=True)
 
 
 class ExpenseLineAdd(models.Model):
-
-    account_ref = models.ForeignKey("QBAccount", blank=True, null=True) # AccountRef
-    amount = models.CharField(max_length=2500, blank=True, null=True) # Amount
+    account_ref = models.ForeignKey("QBAccount", blank=True, null=True, on_delete=models.CASCADE)  # AccountRef
+    amount = models.CharField(max_length=2500, blank=True, null=True)  # Amount
     memo = models.CharField(max_length=2500, blank=True, null=True)
-    customer_ref = models.ForeignKey("QBCustomer", blank=True, null=True)
+    customer_ref = models.ForeignKey("QBCustomer", blank=True, null=True, on_delete=models.CASCADE)
 
 
 class QBItemLineAdd(models.Model):
-
-    item_ref = models.ForeignKey("QBItem", blank=True, null=True) # ItemRef
-    serial_number = models.CharField(max_length=255, blank=True, null=True) # SerialNumber
-    lot_number = models.CharField(max_length=255, blank=True, null=True) # LotNumber
-    desc = models.CharField(max_length=255, blank=True, null=True) # Desc
-    quantity = models.CharField(max_length=255, blank=True, null=True) # Quantity
-    amount = models.CharField(max_length=2500, blank=True, null=True) # Amount
-    cost = models.CharField(max_length=255, blank=True, null=True) # Cost
-    unit_of_measure = models.CharField(max_length=255, blank=True, null=True) # UnitOfMeasure
-    memo = models.CharField(max_length=2500, blank=True, null=True) # Memo
-    customer_ref = models.ForeignKey("QBCustomer", blank=True, null=True) # CustomerRef
-    sales_rep_ref = models.ForeignKey("QBEmployee", blank=True, null=True)
+    item_ref = models.ForeignKey("QBItem", blank=True, null=True, on_delete=models.CASCADE)  # ItemRef
+    serial_number = models.CharField(max_length=255, blank=True, null=True)  # SerialNumber
+    lot_number = models.CharField(max_length=255, blank=True, null=True)  # LotNumber
+    desc = models.CharField(max_length=255, blank=True, null=True)  # Desc
+    quantity = models.CharField(max_length=255, blank=True, null=True)  # Quantity
+    amount = models.CharField(max_length=2500, blank=True, null=True)  # Amount
+    cost = models.CharField(max_length=255, blank=True, null=True)  # Cost
+    unit_of_measure = models.CharField(max_length=255, blank=True, null=True)  # UnitOfMeasure
+    memo = models.CharField(max_length=2500, blank=True, null=True)  # Memo
+    customer_ref = models.ForeignKey("QBCustomer", blank=True, null=True, on_delete=models.CASCADE)  # CustomerRef
+    sales_rep_ref = models.ForeignKey("QBEmployee", blank=True, null=True, on_delete=models.CASCADE)
 
 
 class QBItemPayment(models.Model):
-
     list_id = models.CharField(max_length=2500, primary_key=True)  # ListID
-    name = models.CharField(max_length=255, blank=True, null=True) # Name
-    item_desc = models.CharField(max_length=255, blank=True, null=True) # ItemDesc
+    name = models.CharField(max_length=255, blank=True, null=True)  # Name
+    item_desc = models.CharField(max_length=255, blank=True, null=True)  # ItemDesc
     edit_sequence = models.CharField(max_length=2500, blank=True, null=True)  # EditSequence
     time_created = models.CharField(max_length=2500, blank=True, null=True)  # TimeCreated
     time_modified = models.CharField(max_length=2500, blank=True, null=True)  # TimeModified
-    
+
     def __unicode__(self):
         return self.name
